@@ -76,7 +76,7 @@ async def generate(req: GenerateRequest):
             media_type="text/event-stream",
         )
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         try:
             resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
             resp.raise_for_status()
@@ -103,7 +103,7 @@ async def chat(req: ChatRequest):
             media_type="text/event-stream",
         )
 
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         try:
             resp = await client.post(f"{OLLAMA_BASE_URL}/api/chat", json=payload)
             resp.raise_for_status()
@@ -193,7 +193,7 @@ async def delete_model(model_name: str):
 
 
 async def _stream_ollama(path: str, payload: dict):
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=300) as client:
         async with client.stream("POST", f"{OLLAMA_BASE_URL}{path}", json=payload) as resp:
             resp.raise_for_status()
             async for chunk in resp.aiter_text():
