@@ -41,17 +41,17 @@ ollama:
     httpGet:
       path: /api/tags
       port: 11434
-    initialDelaySeconds: 30
-    periodSeconds: 15
-    failureThreshold: 5
+    initialDelaySeconds: 60
+    periodSeconds: 20
+    failureThreshold: 10
 
   readinessProbe:
     httpGet:
       path: /api/tags
       port: 11434
-    initialDelaySeconds: 20
-    periodSeconds: 10
-    failureThreshold: 3
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 10
 
   hpa:
     enabled: false
@@ -89,15 +89,15 @@ ollamaApi:
     httpGet:
       path: /health
       port: 8000
-    initialDelaySeconds: 15
+    initialDelaySeconds: 30
     periodSeconds: 15
-    failureThreshold: 3
+    failureThreshold: 5
 
   readinessProbe:
     httpGet:
       path: /health
       port: 8000
-    initialDelaySeconds: 10
+    initialDelaySeconds: 30
     periodSeconds: 10
     failureThreshold: 3
 
