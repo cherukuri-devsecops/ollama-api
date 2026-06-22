@@ -1,0 +1,41 @@
+{{- if .Values.ollama.persistence.enabled }}
+{{- if .Values.ollama.persistence.nfsServer }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "ollama-api.ollama.fullname" . }}-models
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  capacity:
+    storage: {{ .Values.ollama.persistence.size }}
+  accessModes:
+    - {{ .Values.ollama.persistence.accessMode }}
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: {{ .Values.ollama.persistence.nfsServer }}
+    path: {{ .Values.ollama.persistence.nfsPath }}
+---
+{{- end }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ollama-api.ollama.fullname" . }}-models
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  accessModes:
+    - {{ .Values.ollama.persistence.accessMode }}
+  {{- if .Values.ollama.persistence.storageClass }}
+  storageClassName: {{ .Values.ollama.persistence.storageClass }}
+  {{- end }}
+  {{- if .Values.ollama.persistence.nfsServer }}
+  storageClassName: ""
+  volumeName: {{ include "ollama-api.ollama.fullname" . }}-models
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ollama.persistence.size }}
+{{- end }}

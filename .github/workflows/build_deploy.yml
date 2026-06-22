@@ -1,0 +1,103 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  APP_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/ollama-api
+  NAMESPACE: ollama-api
+jobs:
+  build-ollama:
+    runs-on: arc-runner-set
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "image_tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build app image
+        run: |
+          docker build \
+            --build-arg GIT_SHA=${{ github.sha }} \
+            -f Dockerfile \
+            -t $APP_IMAGE:${{ steps.meta.outputs.image_tag }} .
+
+      - name: Push app image
+        run: docker push $APP_IMAGE:${{ steps.meta.outputs.image_tag }}
+
+  # ── Security scan ─────────────────────────────────────────────────────────
+  # security-scan:
+  #   name: Security Scan
+  #   needs: build-auth
+  #   runs-on: arc-runner-set
+  #   permissions:
+  #     security-events: write
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Run Trivy vulnerability scan
+  #       uses: aquasecurity/trivy-action@0.29.0
+  #       with:
+  #         image-ref: ${{ env.APP_IMAGE }}:${{ needs.build-auth.outputs.image_tag }}
+  #         format: sarif
+  #         output: trivy-results.sarif
+  #         severity: CRITICAL,HIGH
+  #         ignore-unfixed: true
+
+  #     - name: Upload results to GitHub Security tab
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       if: always()
+  #       with:
+  #         sarif_file: trivy-results.sarif
+
+  deploy:
+    needs: [build-ollama]
+    runs-on: arc-runner-set
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          echo "KUBECONFIG=$PWD/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Helm upgrade
+        run: |
+          helm upgrade --install ollama-api ./helm/ollama-api \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --set ollamaApi.image.repository=${{ env.APP_IMAGE }} \
+            --set ollamaApi.image.tag=${{ needs.build.outputs.image_tag }} \
+            --set ollamaApi.image.pullPolicy=Always \
+            --rollback-on-failure \
+            --timeout 5m \
+            --wait \
+            --history-max 5
+
+      - name: Verify rollout
+        run: |
+          kubectl rollout status deployment/ollama-api \
+            --namespace ${{ env.NAMESPACE }} \
+            --timeout=120s
+
+      - name: Smoke test
+        run: |
+          curl -s -f https://ollama-api.cloud-devsecops.com/health || exit 1

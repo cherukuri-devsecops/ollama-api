@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ollama-api.api.fullname" . }}
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama-api
+spec:
+  replicas: {{ .Values.ollamaApi.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ollama-api.api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ollama-api.api.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: ollama-api
+          image: "{{ .Values.ollamaApi.image.repository }}:{{ .Values.ollamaApi.image.tag }}"
+          imagePullPolicy: {{ .Values.ollamaApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: OLLAMA_BASE_URL
+              value: {{ include "ollama-api.ollamaBaseUrl" . | quote }}
+          resources:
+            requests:
+              {{- toYaml .Values.ollamaApi.resources.requests | nindent 14 }}
+            limits:
+              {{- toYaml .Values.ollamaApi.resources.limits | nindent 14 }}
+          livenessProbe:
+            {{- toYaml .Values.ollamaApi.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.ollamaApi.readinessProbe | nindent 12 }}

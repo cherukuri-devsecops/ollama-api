@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ollama-api.ollama.fullname" . }}
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  type: {{ .Values.ollama.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.ollama.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "ollama-api.ollama.selectorLabels" . | nindent 4 }}

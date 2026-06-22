@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+docker-compose.yml
+Dockerfile
+
+# Helm
+helm/
+
+# Ollama model data
+ollama_data/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Misc
+README.md
+LICENSE
+*.md

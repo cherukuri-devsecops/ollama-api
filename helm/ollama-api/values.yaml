@@ -1,0 +1,114 @@
+namespace: ollama-api
+
+nameOverride: ""
+fullnameOverride: ""
+
+ollama:
+  image:
+    repository: ollama/ollama
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicaCount: 2
+
+  service:
+    type: ClusterIP
+    port: 11434
+
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteMany
+    size: 25Gi
+    nfsServer: "10.0.0.40"
+    nfsPath: /data/nfs/ollama
+
+  # Set gpu.enabled: true and configure runtimeClassName for NVIDIA GPU nodes
+  gpu:
+    enabled: false
+    count: 1
+    runtimeClassName: nvidia   # used only when gpu.enabled is true
+
+  livenessProbe:
+    httpGet:
+      path: /api/tags
+      port: 11434
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    failureThreshold: 5
+
+  readinessProbe:
+    httpGet:
+      path: /api/tags
+      port: 11434
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    failureThreshold: 3
+
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+ollamaApi:
+  image:
+    repository: ollama-api     # replace with your registry image, e.g. ghcr.io/you/ollama-api
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 8000
+    loadBalancerIP: "10.0.0.243"
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # Overrides the auto-derived Ollama service URL when set
+  ollamaBaseUrl: ""
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+
+  hpa:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  path: /

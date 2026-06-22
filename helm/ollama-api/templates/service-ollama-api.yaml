@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ollama-api.api.fullname" . }}
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama-api
+spec:
+  type: {{ .Values.ollamaApi.service.type }}
+  {{- if .Values.ollamaApi.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.ollamaApi.service.loadBalancerIP }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.ollamaApi.service.port }}
+      targetPort: {{ .Values.ollamaApi.service.targetPort | default "http" }}
+      protocol: TCP
+  selector:
+    {{- include "ollama-api.api.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,59 @@
+{{- if .Values.ollamaApi.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ollama-api.api.fullname" . }}
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ollama-api.api.fullname" . }}
+  minReplicas: {{ .Values.ollamaApi.hpa.minReplicas }}
+  maxReplicas: {{ .Values.ollamaApi.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.ollamaApi.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.ollamaApi.hpa.targetMemoryUtilizationPercentage }}
+{{- end }}
+{{- if .Values.ollama.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ollama-api.ollama.fullname" . }}
+  labels:
+    {{- include "ollama-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ollama
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ollama-api.ollama.fullname" . }}
+  minReplicas: {{ .Values.ollama.hpa.minReplicas }}
+  maxReplicas: {{ .Values.ollama.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.ollama.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.ollama.hpa.targetMemoryUtilizationPercentage }}
+{{- end }}

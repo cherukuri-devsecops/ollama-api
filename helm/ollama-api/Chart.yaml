@@ -1,0 +1,13 @@
+apiVersion: v2
+name: ollama-api
+description: Helm chart for Ollama LLM runtime + FastAPI gateway
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - ollama
+  - llm
+  - ai
+  - fastapi
+maintainers:
+  - name: cherukuri
