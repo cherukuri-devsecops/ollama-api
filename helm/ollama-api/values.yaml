@@ -53,6 +53,10 @@ ollama:
     periodSeconds: 15
     failureThreshold: 10
 
+  # Seconds Kubernetes waits for the deployment to make progress before marking it Failed.
+  # ollama/ollama is a large image; 900s gives room for a cold pull + probe warmup.
+  progressDeadlineSeconds: 900
+
   hpa:
     enabled: false
     minReplicas: 1

@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/component: ollama
 spec:
   replicas: {{ .Values.ollama.replicaCount }}
+  progressDeadlineSeconds: {{ .Values.ollama.progressDeadlineSeconds }}
   selector:
     matchLabels:
       {{- include "ollama-api.ollama.selectorLabels" . | nindent 6 }}
