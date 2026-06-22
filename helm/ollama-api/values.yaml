@@ -109,6 +109,6 @@ ollamaApi:
     targetMemoryUtilizationPercentage: 80
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   path: /
