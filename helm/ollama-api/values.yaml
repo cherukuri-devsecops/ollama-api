@@ -9,7 +9,7 @@ ollama:
     tag: latest
     pullPolicy: IfNotPresent
 
-  replicaCount: 2
+  replicaCount: 1
 
   service:
     type: ClusterIP
