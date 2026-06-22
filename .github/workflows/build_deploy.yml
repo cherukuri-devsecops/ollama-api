@@ -85,7 +85,7 @@ jobs:
             --namespace ${{ env.NAMESPACE }} \
             --create-namespace \
             --set ollamaApi.image.repository=${{ env.APP_IMAGE }} \
-            --set ollamaApi.image.tag=${{ needs.build.outputs.image_tag }} \
+            --set ollamaApi.image.tag=${{ needs.build-ollama.outputs.image_tag }} \
             --set ollamaApi.image.pullPolicy=Always \
             --rollback-on-failure \
             --timeout 5m \
