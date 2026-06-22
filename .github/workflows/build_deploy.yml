@@ -94,9 +94,12 @@ jobs:
 
       - name: Verify rollout
         run: |
-          kubectl rollout status deployment/ollama-api \
+          kubectl rollout status deployment/ollama-api-api \
             --namespace ${{ env.NAMESPACE }} \
             --timeout=120s
+          kubectl rollout status deployment/ollama-api-ollama \
+            --namespace ${{ env.NAMESPACE }} \
+            --timeout=600s
 
       - name: Smoke test
         run: |
