@@ -1,21 +1,21 @@
-Ollama Stack deployed successfully!
+Ollama API deployed successfully!
 
 Components:
-  - Ollama:     {{ include "ollama-stack.ollama.fullname" . }} (port {{ .Values.ollama.service.port }})
-  - API Gateway: {{ include "ollama-stack.api.fullname" . }} (port {{ .Values.ollamaApi.service.port }})
+  - Ollama:      {{ include "ollama-api.ollama.fullname" . }} (port {{ .Values.ollama.service.port }})
+  - API Gateway: {{ include "ollama-api.api.fullname" . }} (port {{ .Values.ollamaApi.service.port }})
 
 Access the API Gateway:
 {{- if .Values.ingress.enabled }}
-  http{{ if .Values.ingress.tls }}s{{ end }}://{{ (first .Values.ingress.hosts).host }}
+  http://{{ include "ollama-api.api.fullname" . }} (via {{ .Values.ingress.className }} ingress)
 {{- else if eq .Values.ollamaApi.service.type "NodePort" }}
-  export NODE_PORT=$(kubectl get svc {{ include "ollama-stack.api.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
+  export NODE_PORT=$(kubectl get svc {{ include "ollama-api.api.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
   export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
   echo "http://${NODE_IP}:${NODE_PORT}"
 {{- else if eq .Values.ollamaApi.service.type "LoadBalancer" }}
-  export LB_IP=$(kubectl get svc {{ include "ollama-stack.api.fullname" . }} -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+  export LB_IP=$(kubectl get svc {{ include "ollama-api.api.fullname" . }} -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
   echo "http://${LB_IP}:{{ .Values.ollamaApi.service.port }}"
 {{- else }}
-  kubectl port-forward svc/{{ include "ollama-stack.api.fullname" . }} 8000:{{ .Values.ollamaApi.service.port }}
+  kubectl port-forward svc/{{ include "ollama-api.api.fullname" . }} 8000:{{ .Values.ollamaApi.service.port }}
   # Then visit: http://localhost:8000
 {{- end }}
 
