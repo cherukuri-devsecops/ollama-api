@@ -127,7 +127,7 @@ helm upgrade --install ollama-api ./helm/ollama-api \
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `ollama.replicaCount` | `2` | Number of Ollama pods |
+| `ollama.replicaCount` | `1` | Number of Ollama pods |
 | `ollama.resources.limits` | 8Gi / 4 CPU | Resource ceiling per Ollama pod |
 | `ollama.persistence.size` | `25Gi` | PVC size for model storage |
 | `ollama.persistence.nfsServer` | `10.0.0.40` | NFS server IP |
@@ -138,6 +138,9 @@ helm upgrade --install ollama-api ./helm/ollama-api \
 | `ollamaApi.service.loadBalancerIP` | `10.0.0.243` | Static LB IP (bare-metal) |
 | `ollamaApi.ollamaBaseUrl` | `""` | Override auto-derived Ollama URL |
 | `ingress.enabled` | `false` | Enable Nginx ingress |
+| `ingress.className` | `nginx` | IngressClass name — sets both `spec.ingressClassName` and the `kubernetes.io/ingress.class` annotation for compatibility with older controllers |
+| `ingress.host` | `""` | Hostname to match (e.g. `ollama-api.example.com`); omit for catch-all |
+| `ingress.path` | `/` | Path prefix to match |
 
 ### GPU Support
 

@@ -115,4 +115,5 @@ ollamaApi:
 ingress:
   enabled: false
   className: nginx
+  host: ""        # e.g. ollama-api.example.com — leave empty for catch-all
   path: /
