@@ -7,6 +7,8 @@ import os
 import json
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+git_sha = os.getenv("GIT_SHA", "unknown")
+
 
 app = FastAPI(title="Ollama API Gateway", version="1.0.0")
 
@@ -46,7 +48,7 @@ async def health():
         try:
             resp = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
             resp.raise_for_status()
-            return {"status": "ok", "ollama": "reachable"}
+            return {"status": "ok", "ollama": "reachable", "git_sha": git_sha}
         except Exception as e:
             raise HTTPException(status_code=503, detail=f"Ollama unreachable: {e}")
 
