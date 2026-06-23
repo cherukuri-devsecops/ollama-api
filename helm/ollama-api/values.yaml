@@ -33,7 +33,7 @@ ollama:
 
   # Set gpu.enabled: true and configure runtimeClassName for NVIDIA GPU nodes
   gpu:
-    enabled: false
+    enabled: true
     count: 1
     runtimeClassName: nvidia   # used only when gpu.enabled is true
 
