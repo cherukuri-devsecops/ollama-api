@@ -66,7 +66,7 @@ ollama:
 
 ollamaApi:
   image:
-    repository: cherukuri1991/ollama-api     # replace with your registry image, e.g. ghcr.io/you/ollama-api
+    repository: ollama-api     # replace with your registry image, e.g. ghcr.io/you/ollama-api
     tag: latest
     pullPolicy: IfNotPresent
 
