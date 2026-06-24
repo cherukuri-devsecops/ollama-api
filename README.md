@@ -4,6 +4,8 @@ A lightweight FastAPI gateway that exposes a clean REST API over a self-hosted [
 
 ## Architecture
 
+Both `ollama` and `ollama-api` run as sidecar containers inside the **same pod**. The API gateway reaches Ollama over `localhost:11434`, eliminating an inter-pod network hop. A single Deployment controls replica count for both.
+
 ```mermaid
 graph TD
     subgraph Client
@@ -17,16 +19,15 @@ graph TD
             IG[Ingress\nnginx-class]
         end
 
-        subgraph API["ollama-api (FastAPI)"]
-            LB[LoadBalancer Service\nport 80]
-            AP1[ollama-api Pod]
-            AP2[ollama-api Pod]
+        subgraph Services["Services"]
+            LB[LoadBalancer Service\nport 80 → 8000]
+            CS[ClusterIP Service\nport 11434]
         end
 
-        subgraph LLM["Ollama LLM Runtime"]
-            OS[ClusterIP Service\nport 11434]
-            OP1[ollama Pod]
-            OP2[ollama Pod]
+        subgraph Pod["Pod — sidecar"]
+            AP[ollama-api container\nFastAPI · port 8000]
+            OP[ollama container\nport 11434]
+            AP -->|localhost:11434| OP
         end
 
         subgraph Storage["Persistent Storage"]
@@ -38,14 +39,9 @@ graph TD
     C -->|HTTPS| IG
     IG --> LB
     C -->|HTTP| LB
-    LB --> AP1
-    LB --> AP2
-    AP1 -->|OLLAMA_BASE_URL| OS
-    AP2 -->|OLLAMA_BASE_URL| OS
-    OS --> OP1
-    OS --> OP2
-    OP1 --- PVC
-    OP2 --- PVC
+    LB --> AP
+    CS -.->|direct ollama access| OP
+    OP --- PVC
     PVC --- NFS
 ```
 
@@ -61,7 +57,8 @@ HTTP Client → ollama-api :8001 → ollama :11434 → ./ollama_data (bind mount
 git push main → GitHub Actions (ARC runner)
                   ├─ docker build + push → Docker Hub  (:7-char SHA tag)
                   └─ helm upgrade --install → Kubernetes cluster
-                       └─ kubectl rollout status + /health smoke test
+                       ├─ kubectl rollout status (timeout 20m, rollback on failure)
+                       └─ curl smoke test → /health
 ```
 
 ## API Endpoints
@@ -127,16 +124,16 @@ helm upgrade --install ollama-api ./helm/ollama-api \
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `ollama.replicaCount` | `1` | Number of Ollama pods |
-| `ollama.resources.limits` | 8Gi / 4 CPU | Resource ceiling per Ollama pod |
+| `ollama.replicaCount` | `1` | Number of pods (each runs both `ollama` and `ollama-api` as sidecars) |
+| `ollama.resources.limits` | 7Gi / 3 CPU | Resource ceiling for the `ollama` container |
+| `ollama.progressDeadlineSeconds` | `900` | Seconds K8s waits for a deploy to progress before marking it Failed; extended to allow for large image pulls |
 | `ollama.persistence.size` | `25Gi` | PVC size for model storage |
 | `ollama.persistence.nfsServer` | `10.0.0.40` | NFS server IP |
 | `ollama.persistence.nfsPath` | `/data/nfs/ollama` | NFS export path |
 | `ollama.gpu.enabled` | `false` | Enable GPU scheduling |
-| `ollama.gpu.runtimeClassName` | `nvidia` | Container runtime for GPU pods |
-| `ollamaApi.replicaCount` | `1` | Number of API gateway pods |
-| `ollamaApi.service.loadBalancerIP` | `10.0.0.243` | Static LB IP (bare-metal) |
-| `ollamaApi.ollamaBaseUrl` | `""` | Override auto-derived Ollama URL |
+| `ollama.gpu.runtimeClassName` | `nvidia` | Container runtime class used when `gpu.enabled` is true |
+| `ollamaApi.resources.limits` | 512Mi / 500m CPU | Resource ceiling for the `ollama-api` sidecar container |
+| `ollamaApi.service.loadBalancerIP` | `10.0.0.243` | Static LB IP (bare-metal); routes port 80 → container port 8000 |
 | `ingress.enabled` | `false` | Enable Nginx ingress |
 | `ingress.className` | `nginx` | IngressClass name — sets both `spec.ingressClassName` and the `kubernetes.io/ingress.class` annotation for compatibility with older controllers |
 | `ingress.host` | `""` | Hostname to match (e.g. `ollama-api.example.com`); omit for catch-all |
@@ -155,7 +152,7 @@ ollama:
 
 ### HPA (autoscaling)
 
-Both `ollama.hpa` and `ollamaApi.hpa` support `enabled`, `minReplicas`, `maxReplicas`, and CPU/memory targets.
+`ollama.hpa` supports `enabled`, `minReplicas`, `maxReplicas`, and CPU/memory targets. Because both containers run as sidecars in the same pod, scaling the Deployment scales both together.
 
 ## Local Development
 

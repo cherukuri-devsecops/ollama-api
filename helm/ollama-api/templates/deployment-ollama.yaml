@@ -8,6 +8,8 @@ metadata:
 spec:
   replicas: {{ .Values.ollama.replicaCount }}
   progressDeadlineSeconds: {{ .Values.ollama.progressDeadlineSeconds }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "ollama-api.ollama.selectorLabels" . | nindent 6 }}
