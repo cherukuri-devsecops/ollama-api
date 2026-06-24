@@ -69,14 +69,3 @@ Ollama API component name and labels.
 {{ include "ollama-api.selectorLabels" . }}
 app.kubernetes.io/component: ollama-api
 {{- end }}
-
-{{/*
-Resolve the Ollama base URL: use override if provided, else point to the in-cluster service.
-*/}}
-{{- define "ollama-api.ollamaBaseUrl" -}}
-{{- if .Values.ollamaApi.ollamaBaseUrl }}
-{{- .Values.ollamaApi.ollamaBaseUrl }}
-{{- else }}
-{{- printf "http://%s:%d" (include "ollama-api.ollama.fullname" .) (.Values.ollama.service.port | int) }}
-{{- end }}
-{{- end }}

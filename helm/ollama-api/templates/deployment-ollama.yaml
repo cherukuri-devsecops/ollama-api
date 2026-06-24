@@ -51,6 +51,25 @@ spec:
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
+        - name: ollama-api
+          image: "{{ .Values.ollamaApi.image.repository }}:{{ .Values.ollamaApi.image.tag }}"
+          imagePullPolicy: {{ .Values.ollamaApi.image.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: OLLAMA_BASE_URL
+              value: "http://localhost:11434"
+          resources:
+            requests:
+              {{- toYaml .Values.ollamaApi.resources.requests | nindent 14 }}
+            limits:
+              {{- toYaml .Values.ollamaApi.resources.limits | nindent 14 }}
+          livenessProbe:
+            {{- toYaml .Values.ollamaApi.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.ollamaApi.readinessProbe | nindent 12 }}
       volumes:
         - name: ollama-data
           {{- if .Values.ollama.persistence.enabled }}

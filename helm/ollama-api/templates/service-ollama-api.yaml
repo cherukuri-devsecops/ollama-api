@@ -16,4 +16,4 @@ spec:
       targetPort: {{ .Values.ollamaApi.service.targetPort | default "http" }}
       protocol: TCP
   selector:
-    {{- include "ollama-api.api.selectorLabels" . | nindent 4 }}
+    {{- include "ollama-api.ollama.selectorLabels" . | nindent 4 }}
